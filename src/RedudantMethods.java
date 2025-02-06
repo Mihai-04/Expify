@@ -2,11 +2,21 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.Set;
 
 public class RedudantMethods {
+
     public void setButtonDesign(JButton button, Dimension dim, Color c1, Color c2, Font font) {
         button.setMinimumSize(dim);
         button.setPreferredSize(dim);
+        button.setMaximumSize(dim);
         button.setBackground(c1);
         button.setForeground(c2);
         button.setFont(font);
@@ -33,7 +43,7 @@ public class RedudantMethods {
         panel.setMaximumSize(dim);
         panel.setBackground(backgroundColor);
         panel.setLayout(layout);
-        panel.setBorder((Border) bf);
+        panel.setBorder(bf);
     }
 
     public Boolean isVinValid(String vin) {
@@ -103,5 +113,66 @@ public class RedudantMethods {
             return Character.getNumericValue(check);
         }
         return -1;
+    }
+
+    public boolean isDataValid(String numTextPlate, String vinTextField) {
+        return numTextPlate.length() >= 3 && isVinValid(vinTextField);
+    }
+
+    public long daysLeft(LocalDate chosenDate) {
+        LocalDate currentDate = LocalDate.now();
+
+        return ChronoUnit.DAYS.between(currentDate, chosenDate);
+    }
+
+    public void loadMainPanel(JPanel mainPanel, JPanel topPanel, JPanel bottomPanel) {
+        DatabaseHelper databaseHelper = new DatabaseHelper();
+
+        mainPanel.removeAll();
+        topPanel.setVisible(true);
+        bottomPanel.setVisible(false);
+        databaseHelper.printCars(mainPanel);
+    }
+
+    public void setCalendar(JSpinner spinDate) {
+        spinDate.setBackground(new Color(45, 45, 45));
+        spinDate.setBorder(null);
+        spinDate.setEditor(new JSpinner.DateEditor(spinDate, "dd/MM/yyyy"));
+        spinDate.setPreferredSize(new Dimension(350, 40));
+        spinDate.setMinimumSize(new Dimension(350, 40));
+        spinDate.setMaximumSize(new Dimension(350, 40));
+        spinDate.setFont(new Font("Arial", Font.BOLD, 16));
+        JComponent editor = spinDate.getEditor();
+        int n = editor.getComponentCount();
+        for(int i=0; i<n; i++) {
+            Component c = editor.getComponent(i);
+            if(c instanceof JTextField) {
+                c.setForeground(new Color(150, 150, 150));
+                c.setBackground(new Color(45, 45, 45));
+                ((JTextField) c).setCaretColor(Color.white);
+            }
+        }
+        for(Component comp :spinDate.getComponents()) {
+            if (comp instanceof JButton) {
+                spinDate.remove(comp);
+            }
+        }
+    }
+
+    public void createDirectory(String numTextPlate) {
+        String PATH = "D:\\Java 2024\\Expify\\Documents\\";
+        String directoryName = PATH.concat(numTextPlate);
+        File directory = new File(directoryName);
+        if(!directory.exists()) {
+            directory.mkdir();
+        }
+    }
+
+    public void addFileToDirectory(File selectedFile, Path selectedPath, Path destinationPath) {
+        try {
+            Files.copy(selectedPath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

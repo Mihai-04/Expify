@@ -4,6 +4,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
@@ -11,11 +15,13 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class NewCarAddedHandler {
-    JButton saveButton = new JButton("Save");
-    JButton cancelButton = new JButton("Cancel");
+    public NewCarAddedHandler(JPanel mainPanel, JPanel topPanel, JPanel bottomPanel) {
+        bottomPanel.removeAll();
+        JButton saveButton = new JButton("Save");
+        JButton cancelButton = new JButton("Cancel");
 
-    public NewCarAddedHandler(JPanel mainPanel, JPanel bottomPanel) {
         RedudantMethods redudantMethods = new RedudantMethods();
+        DatabaseHelper databaseHelper = new DatabaseHelper();
 
         bottomPanel.setEnabled(true);
         bottomPanel.setVisible(true);
@@ -52,6 +58,8 @@ public class NewCarAddedHandler {
             public void focusLost(FocusEvent e) {
                 if(vinTextField.getText().trim().isEmpty()) {
                     vinTextField.setText("Vehicle Identification Number");
+                } else {
+                    vinTextField.setText(vinTextField.getText().toUpperCase());
                 }
             }
         });
@@ -80,6 +88,8 @@ public class NewCarAddedHandler {
             public void focusLost(FocusEvent e) {
                 if(numTextPlate.getText().trim().isEmpty()) {
                     numTextPlate.setText("Car Num Plate");
+                } else {
+                    numTextPlate.setText(numTextPlate.getText().toUpperCase());
                 }
             }
         });
@@ -99,35 +109,89 @@ public class NewCarAddedHandler {
         Date endDate = new Date(200, Calendar.DECEMBER, 31);
         SpinnerDateModel model = new SpinnerDateModel(new Date(), startDate, endDate, Calendar.DAY_OF_MONTH);
         JSpinner spinDate = new JSpinner(model);
-        spinDate.setBackground(new Color(45, 45, 45));
-        spinDate.setBorder(null);
-        spinDate.setEditor(new JSpinner.DateEditor(spinDate, "dd/MM/yyyy"));
-        spinDate.setPreferredSize(new Dimension(350, 40));
-        spinDate.setMinimumSize(new Dimension(350, 40));
-        spinDate.setMaximumSize(new Dimension(350, 40));
-        spinDate.setFont(new Font("Arial", Font.BOLD, 16));
-        JComponent editor = spinDate.getEditor();
-        int n = editor.getComponentCount();
-        for(int i=0; i<n; i++) {
-            Component c = editor.getComponent(i);
-            if(c instanceof JTextField) {
-                c.setForeground(new Color(150, 150, 150));
-                c.setBackground(new Color(45, 45, 45));
-                ((JTextField) c).setCaretColor(Color.white);
-            }
-        }
-        for(Component comp :spinDate.getComponents()) {
-            if(comp instanceof JButton) {
-                spinDate.remove(comp);
-            }
-        }
+        redudantMethods.setCalendar(spinDate);
         rcaPanel.add(spinDate);
         mainPanel.add(rcaPanel);
 
-        /*
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        */
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        JButton selectRCAButton = new JButton("Select RCA");
+        redudantMethods.setButtonDesign(selectRCAButton, new Dimension(100, 50), Color.darkGray, Color.white,
+                new Font("Arial", Font.BOLD, 12));
+        selectRCAButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        selectRCAButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                File destination = new File("D:\\Java 2024\\Expify\\Documents\\" + numTextPlate.getText());
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                fileChooser.setDialogTitle("Choose RCA file");
+                fileChooser.setAcceptAllFileFilterUsed(false);
+                int response = fileChooser.showOpenDialog(null);
+                if(response == JFileChooser.APPROVE_OPTION) {
+                    try {
+                        String PATH = "D:\\Java 2024\\Expify\\Documents\\";
+                        String directoryName = PATH.concat(numTextPlate.getText());
+                        File directory = new File(directoryName);
+                        if(!directory.exists()) {
+                            directory.mkdir();
+                        }
+                        File selectedFile = fileChooser.getSelectedFile();
+                        Path selectedPath = fileChooser.getSelectedFile().toPath();
+                        Path destinationPath = destination.toPath().resolve(selectedFile.getName());
+                        Files.copy(selectedPath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            }
+        });
+        mainPanel.add(selectRCAButton);
+
+        JTextField insuranceTextDescription = new JTextField("Insurance Expiring Date:");
+        redudantMethods.setTextFieldDesign(insuranceTextDescription, new Dimension(300, 25), null, new Color(150, 150, 150),
+                new Font("Arial", Font.PLAIN, 12), new Color(45, 45, 45), false);
+        mainPanel.add(insuranceTextDescription);
+
+        JPanel insurancePanel = new JPanel();
+        redudantMethods.setPanelDesign(insurancePanel, new Dimension(350, 50), new Color(45, 45,45),
+                new FlowLayout(FlowLayout.LEFT), BorderFactory.createMatteBorder(0 , 0, 2, 0, new Color(150, 150, 150)));
+
+        SpinnerDateModel insuranceModel = new SpinnerDateModel(new Date(), startDate, endDate, Calendar.DAY_OF_MONTH);
+        JSpinner insuranceDate = new JSpinner(insuranceModel);
+        redudantMethods.setCalendar(insuranceDate);
+        insurancePanel.add(insuranceDate);
+        mainPanel.add(insurancePanel);
+
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        JButton selectInsuranceButton = new JButton("Select Insurance");
+        redudantMethods.setButtonDesign(selectInsuranceButton, new Dimension(100, 50), Color.darkGray, Color.white,
+                new Font("Arial", Font.BOLD, 12));
+        selectInsuranceButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        selectInsuranceButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                File destination = new File("D:\\Java 2024\\Expify\\Documents\\" + numTextPlate.getText());
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                fileChooser.setDialogTitle("Choose insurance file");
+                fileChooser.setAcceptAllFileFilterUsed(false);
+                int response = fileChooser.showOpenDialog(null);
+                if(response == JFileChooser.APPROVE_OPTION) {
+                    try {
+                        redudantMethods.createDirectory(numTextPlate.getText());
+                        File selectedFile = fileChooser.getSelectedFile();
+                        Path selectedPath = fileChooser.getSelectedFile().toPath();
+                        Path destinationPath = destination.toPath().resolve(selectedFile.getName());
+                        Files.copy(selectedPath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            }
+        });
+        mainPanel.add(selectInsuranceButton);
 
         redudantMethods.setButtonDesign(saveButton, new Dimension(60, 30),
                 new Color(45, 45,45), new Color(150, 150, 150),
@@ -136,7 +200,22 @@ public class NewCarAddedHandler {
         saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println(redudantMethods.isVinValid(vinTextField.getText()));
+                if(!databaseHelper.isDataUnique(numTextPlate.getText().replaceAll("\\s+",""), vinTextField.getText())
+                        && redudantMethods.isDataValid(numTextPlate.getText(), vinTextField.getText())) {
+                    redudantMethods.createDirectory(numTextPlate.getText());
+                    Date rcaDate = model.getDate();
+                    LocalDate rcaLocalDate = rcaDate.toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate();
+                    Date insuranceDate = insuranceModel.getDate();
+                    LocalDate insuranceLocalDate = insuranceDate.toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate();
+                    LocalDate localDate = LocalDate.now();
+                    String numPlate = numTextPlate.getText().toUpperCase().trim().replaceAll(" +", " ");
+                    String vinNumber = vinTextField.getText().toUpperCase();
+                    databaseHelper.insertValue(numPlate, vinNumber, rcaLocalDate, insuranceLocalDate);
+                }
             }
         });
         bottomPanel.add(saveButton);
@@ -148,26 +227,11 @@ public class NewCarAddedHandler {
         cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                /*bottomPanel.setVisible(false);
-                bottomPanel.setEnabled(false);*/
+                redudantMethods.loadMainPanel(mainPanel, topPanel, bottomPanel);
             }
         });
         bottomPanel.add(cancelButton);
 
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Date date = model.getDate();
-                LocalDate chosenDate = date.toInstant()
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate();
-                LocalDate localDate = LocalDate.now();
-                long difference = ChronoUnit.DAYS.between(localDate, chosenDate);
-
-                System.out.println("test " + date);
-                System.out.println("diff " + difference);
-            }
-        });
         mainPanel.repaint();
         mainPanel.revalidate();
     }

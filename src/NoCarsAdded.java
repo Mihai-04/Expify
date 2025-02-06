@@ -8,7 +8,7 @@ public class NoCarsAdded {
     JButton addCarButton = new JButton("+");
     RedudantMethods redudantMethods = new RedudantMethods();
 
-    public NoCarsAdded(JPanel mainPanel, JPanel bottomPanel) {
+    public NoCarsAdded(JPanel mainPanel, JPanel topPanel, JPanel bottomPanel) {
         mainPanel.add(Box.createRigidArea(new Dimension(0, 30)));
         redudantMethods.setTextFieldDesign(noCarsAddedText, new Dimension(250, 50), new Color(30, 30, 30), new Color(150, 150, 150),
                 new Font("Arial", Font.BOLD, 20), new Color(30, 30, 30), false);
@@ -26,7 +26,7 @@ public class NoCarsAdded {
             @Override
             public void actionPerformed(ActionEvent e) {
                 mainPanel.removeAll();
-                new NewCarAddedHandler(mainPanel, bottomPanel);
+                new NewCarAddedHandler(mainPanel, topPanel, bottomPanel);
                 addCarButton.setEnabled(false);
             }
         });
