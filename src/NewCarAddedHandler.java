@@ -1,5 +1,7 @@
+
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
+import javax.swing.plaf.basic.BasicProgressBarUI;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.PlainDocument;
@@ -37,6 +39,7 @@ public class NewCarAddedHandler {
 
         bottomPanel.setEnabled(true);
         bottomPanel.setVisible(true);
+        JPanel notificationPanel = new JPanel();
 
         JPanel vinPanel = new JPanel();
         redundantMethods.setPanelDesign(vinPanel, new Dimension(350, 50), new Color(45, 45,45),
@@ -46,7 +49,7 @@ public class NewCarAddedHandler {
         redundantMethods.setPanelDesign(platePanel, new Dimension(350, 50), new Color(45, 45,45),
                 new FlowLayout(FlowLayout.LEFT), BorderFactory.createMatteBorder(0 , 0, 2, 0, new Color(150, 150, 150)));
 
-        mainPanel.add(Box.createRigidArea(new Dimension(10, 15)));
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
         JTextField vinTextDescription = new JTextField("Vehicle Identification Number:");
         redundantMethods.setComponentDesign(vinTextDescription, new Dimension(300, 25), null, new Color(150, 150, 150),
@@ -134,8 +137,8 @@ public class NewCarAddedHandler {
 
         Date startDate = new Date(100, Calendar.JANUARY, 1);
         Date endDate = new Date(200, Calendar.DECEMBER, 31);
-        SpinnerDateModel model = new SpinnerDateModel(new Date(), startDate, endDate, Calendar.DAY_OF_MONTH);
-        JSpinner spinDate = new JSpinner(model);
+        SpinnerDateModel rcaModel = new SpinnerDateModel(new Date(), startDate, endDate, Calendar.DAY_OF_MONTH);
+        JSpinner spinDate = new JSpinner(rcaModel);
         redundantMethods.setCalendar(spinDate);
         rcaPanel.add(spinDate);
         mainPanel.add(rcaPanel);
@@ -149,7 +152,7 @@ public class NewCarAddedHandler {
         selectRCAButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                File destination = new File(redundantMethods.createCarDocument(numTextPlate.getText()));
+                //File destination = new File(redundantMethods.createCarDocument(numTextPlate.getText()));
                 JFileChooser fileChooser = new JFileChooser();
                 fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fileChooser.setDialogTitle("Choose RCA file");
@@ -159,7 +162,7 @@ public class NewCarAddedHandler {
                     try {
                         File selectedFile = fileChooser.getSelectedFile();
                         rcaFilePath[0] = String.valueOf(fileChooser.getSelectedFile().toPath());
-                        rcaDestinationPath[0] = String.valueOf(destination.toPath().resolve(selectedFile.getName()));
+                        //rcaDestinationPath[0] = String.valueOf(destination.toPath().resolve(selectedFile.getName()));
                     } catch (Exception ex) {
                         throw new RuntimeException(ex);
                     }
@@ -193,7 +196,7 @@ public class NewCarAddedHandler {
         selectInsuranceButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                File destination = new File(redundantMethods.createCarDocument(numTextPlate.getText()));
+                //File destination = new File(redundantMethods.createCarDocument(numTextPlate.getText()));
                 JFileChooser fileChooser = new JFileChooser();
                 fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fileChooser.setDialogTitle("Choose insurance file");
@@ -203,8 +206,8 @@ public class NewCarAddedHandler {
                     try {
                         File selectedFile = fileChooser.getSelectedFile();
                         insuranceFilePath[0] = String.valueOf(fileChooser.getSelectedFile().toPath());
-                        insuranceDestinationPath[0] = String.valueOf(destination.toPath().resolve(selectedFile.getName()));
-                        //Files.copy(selectedPath, rcaDestinationPath, StandardCopyOption.REPLACE_EXISTING);
+                        //insuranceDestinationPath[0] = String.valueOf(destination.toPath().resolve(selectedFile.getName()));
+                        //Files.copy(selectedPath, insuranceDestinationPath, StandardCopyOption.REPLACE_EXISTING);
                     } catch (Exception ex) {
                         throw new RuntimeException(ex);
                     }
@@ -213,6 +216,128 @@ public class NewCarAddedHandler {
         });
         mainPanel.add(selectInsuranceButton);
 
+        JCheckBox leasingCheckBox = new JCheckBox("Leasing");
+        redundantMethods.setComponentDesign(leasingCheckBox, new Dimension(70, 50), null,
+                new Color(150, 150, 150), new Font("Arial", Font.PLAIN, 12));
+        leasingCheckBox.setBorder(BorderFactory.createMatteBorder(0 , 0, 2, 0, new Color(150, 150, 150)));
+        leasingCheckBox.setFocusable(false);
+        leasingCheckBox.setAlignmentX(Component.CENTER_ALIGNMENT);
+        //JPanel leasingPanel = new JPanel();
+        mainPanel.add(leasingCheckBox);
+
+        JPanel totalPanel = new JPanel();
+        redundantMethods.setPanelDesign(totalPanel, new Dimension(350, 50), new Color(45, 45,45),
+                new FlowLayout(FlowLayout.LEFT), BorderFactory.createMatteBorder(0 , 0, 2, 0, new Color(150, 150, 150)));
+        mainPanel.add(totalPanel);
+
+        JTextField totalLeasing = new JTextField("Total Leasing");
+        redundantMethods.setComponentDesign(totalLeasing, new Dimension(350, 40),
+                new Color(45, 45, 45), new Color(150, 150, 150), new Font("Arial", Font.BOLD, 16));
+        totalPanel.setVisible(false);
+        totalPanel.add(totalLeasing);
+
+        totalPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        JPanel monthlyPayPanel = new JPanel();
+        redundantMethods.setPanelDesign(monthlyPayPanel, new Dimension(350, 50), new Color(45, 45, 45),
+                new FlowLayout(FlowLayout.LEFT), BorderFactory.createMatteBorder(0 , 0, 2, 0, new Color(150, 150, 150)));
+        mainPanel.add(monthlyPayPanel);
+
+        JTextField monthlyPay = new JTextField("Monthly Pay");
+        redundantMethods.setComponentDesign(monthlyPay, new Dimension(350, 40),
+                new Color(45, 45, 45), new Color(150, 150, 150), new Font("Arial", Font.BOLD, 16));
+
+        monthlyPayPanel.setVisible(false);
+        monthlyPayPanel.add(monthlyPay);
+
+        monthlyPayPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        JPanel leasingProgressPanel = new JPanel();
+        redundantMethods.setPanelDesign(leasingProgressPanel, new Dimension(350, 50), new Color(45, 45, 45),
+                new FlowLayout(FlowLayout.LEFT), BorderFactory.createMatteBorder(0 , 0, 2, 0, new Color(150, 150, 150)));
+        leasingProgressPanel.setVisible(false);
+        mainPanel.add(leasingProgressPanel);
+
+        JProgressBar progressBar = new JProgressBar(0, 100);
+        redundantMethods.setComponentDesign(progressBar, new Dimension(340, 40),
+                new Color(45, 45, 45), new Color(150, 150, 150), null);
+        progressBar.setBorder(BorderFactory.createMatteBorder(0, 2, 0, 2, new Color(150, 150, 150)));
+        progressBar.setStringPainted(true);
+        progressBar.setUI(new BasicProgressBarUI());
+        //long monthsLeft = redundantMethods.getMonths(String.valueOf(leasingLocalDate));
+        progressBar.setValue(0);
+        progressBar.setString("Paid Leasing (" + 0 + "%)");
+        leasingProgressPanel.add(progressBar);
+
+        leasingProgressPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        String[] days = new String[32];
+        days[0] = "Due date payment";
+        for(int i = 1; i < 32; i++) {
+            days[i] = String.valueOf(i);
+        }
+        JPanel dueDatePanel = new JPanel();
+        redundantMethods.setPanelDesign(dueDatePanel, new Dimension(210, 50), new Color(45, 45, 45),
+                new FlowLayout(FlowLayout.LEFT), BorderFactory.createMatteBorder(0 , 0, 2, 0, new Color(150, 150, 150)));
+        dueDatePanel.setVisible(false);
+        mainPanel.add(dueDatePanel);
+
+        JComboBox daysComboBox = new JComboBox(days);
+        redundantMethods.setComponentDesign(daysComboBox, new Dimension(200, 40),
+                new Color(45, 45, 45), new Color(150, 150, 150), new Font("Arial", Font.BOLD, 16));
+        dueDatePanel.add(daysComboBox);
+
+        totalLeasing.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if(totalLeasing.getText().equals("Total Leasing")) {
+                    totalLeasing.setText("");
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if(totalLeasing.getText().equals("Total Leasing") || totalLeasing.getText().trim().equals("")) {
+                    totalLeasing.setText("Total Leasing");
+                } else if(!monthlyPay.getText().equals("Monthly Pay") && !totalLeasing.getText().equals("Total Leasing")) {
+                    redundantMethods.setPercentage(Double.parseDouble(monthlyPay.getText()), Double.parseDouble(totalLeasing.getText()), progressBar);
+                }
+            }
+        });
+
+        monthlyPay.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if(monthlyPay.getText().equals("Monthly Pay")) {
+                    monthlyPay.setText("");
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if(monthlyPay.getText().equals("Monthly Pay") || monthlyPay.getText().trim().equals("")) {
+                    monthlyPay.setText("Monthly Pay");
+                } else if(!monthlyPay.getText().equals("Monthly Pay") && !totalLeasing.getText().equals("Total Leasing")) {
+                    redundantMethods.setPercentage(Double.parseDouble(monthlyPay.getText()), Double.parseDouble(totalLeasing.getText()), progressBar);
+                }
+            }
+        });
+
+        leasingCheckBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(leasingCheckBox.isSelected()) {
+                    redundantMethods.setCheckBoxValue(true, totalPanel, monthlyPayPanel, leasingProgressPanel, dueDatePanel);
+                } else {
+                    redundantMethods.setCheckBoxValue(false, totalPanel, monthlyPayPanel, leasingProgressPanel, dueDatePanel);
+                }
+                mainPanel.revalidate();
+                mainPanel.repaint();
+            }
+        });
+
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 10))); // gap between mainPanel and bottomPanel
+
         redundantMethods.setComponentDesign(saveButton, new Dimension(60, 30),
                 new Color(45, 45,45), new Color(150, 150, 150),
                 new Font("Arial", Font.BOLD, 20));
@@ -220,11 +345,11 @@ public class NewCarAddedHandler {
         saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String badValue = databaseHelper.isDataUnique(numTextPlate.getText().trim().toUpperCase(), vinTextField.getText());
+                String badValue = databaseHelper.isDataUnique(numTextPlate.getText().replaceAll(" +", "").toUpperCase(), vinTextField.getText());
                 if(badValue.equals("") && redundantMethods.isDataValid(numTextPlate.getText(), vinTextField.getText())) {
                     topPanel.setVisible(true);
                     bottomPanel.setVisible(false);
-                    //redundantMethods.createDirectory(numTextPlate.getText());
+                    //redundantMethods.createDirectory(numTextPlate.getText()); asta nu trebuie repus
                     String directoryPath = redundantMethods.createCarDocument(numTextPlate.getText());
                     String notesFileName = "Notes.txt";
                     File textFile = new File(directoryPath + File.separator, notesFileName);
@@ -235,15 +360,27 @@ public class NewCarAddedHandler {
                     }
                     if(rcaFilePath[0] != null || insuranceFilePath[0] != null) {
                         try {
-                            Files.copy(Paths.get(rcaFilePath[0]), Paths.get(rcaDestinationPath[0]), StandardCopyOption.REPLACE_EXISTING);
-                            Files.copy(Paths.get(insuranceFilePath[0]), Paths.get(insuranceDestinationPath[0]), StandardCopyOption.REPLACE_EXISTING);
+                            Path insuranceSourcePath = Paths.get(insuranceFilePath[0]);
+                            String insuranceFileName = insuranceSourcePath.getFileName().toString();
+                            Path rcaSourcePath = Paths.get(rcaFilePath[0]);
+                            String rcaFileName = rcaSourcePath.getFileName().toString();
+
+                            Path destinationDir = Paths.get(System.getProperty("user.home"), "Expify", "Documents", numTextPlate.getText().replaceAll(" +", " ").replaceFirst("\\s++$", "").toUpperCase());
+                            Files.createDirectories(destinationDir);
+
+                            Path insuranceDestinationPath = destinationDir.resolve(insuranceFileName);
+                            Path rcaDestinationPath = destinationDir.resolve(rcaFileName);
+
+                            if(insuranceSourcePath.toFile().exists()) Files.copy(insuranceSourcePath, insuranceDestinationPath, StandardCopyOption.REPLACE_EXISTING);
+                            if(rcaSourcePath.toFile().exists()) Files.copy(rcaSourcePath, rcaDestinationPath, StandardCopyOption.REPLACE_EXISTING);
+
                             rcaFilePath[0] = null;
                             insuranceFilePath[0] = null;
                         } catch (IOException ex) {
                             throw new RuntimeException(ex);
                         }
                     }
-                    Date rcaDate = model.getDate();
+                    Date rcaDate = rcaModel.getDate();
                     LocalDate rcaLocalDate = rcaDate.toInstant()
                             .atZone(ZoneId.systemDefault())
                             .toLocalDate();
@@ -253,16 +390,17 @@ public class NewCarAddedHandler {
                             .toLocalDate();
                     String numPlate = numTextPlate.getText().toUpperCase().trim().replaceAll(" +", " ");
                     String vinNumber = vinTextField.getText().toUpperCase();
-                    databaseHelper.insertValue(numPlate, vinNumber, rcaLocalDate, insuranceLocalDate);
+                    String totalLeasingAmount = totalLeasing.getText();
+                    String monthlyPayAmount = monthlyPay.getText();
+                    databaseHelper.insertValue(numPlate, vinNumber, rcaLocalDate, insuranceLocalDate, daysComboBox.getSelectedIndex(), totalLeasingAmount, monthlyPayAmount);
                     databaseHelper.printCars(mainPanel, bottomPanel, "");
                 } else if(!badValue.equals("")) {
-                    if(badValue.equals(numTextPlate.getText().trim().toUpperCase())) {
+                    if(badValue.equals(numTextPlate.getText().replaceAll(" +", "").toUpperCase())) {
                         numTextPlate.setText("INVALID VALUE!");
                     } else {
                         vinTextField.setText("INVALID VALUE!");
                         System.out.println("vin Value: " + vinTextField.getText());
                     }
-                    JPanel notificationPanel = new JPanel();
                     redundantMethods.setPanelDesign(notificationPanel, new Dimension(130, 40),
                             null, new FlowLayout(FlowLayout.LEFT), null);
                     JTextField notificationTextField = new JTextField("Invalid input");

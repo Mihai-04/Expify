@@ -3,6 +3,7 @@ import org.junit.Test;
 import java.time.LocalDate;
 
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class RedundantMethodsTest {
     RedundantMethods redundantMethods = new RedundantMethods();
@@ -58,7 +59,7 @@ public class RedundantMethodsTest {
         LocalDate rcaDate = LocalDate.now().plusDays(10);
         LocalDate insDate = LocalDate.now().plusDays(15);
 
-        databaseHelper.insertValue(plate, vin, rcaDate, insDate);
+        databaseHelper.insertValue(plate, vin, rcaDate, insDate, 2, "4500", "1200");
         assertTrue(databaseHelper.getValue(plate));
     }
 
@@ -78,7 +79,7 @@ public class RedundantMethodsTest {
         LocalDate insDate = LocalDate.now().plusDays(15);
 
         for(int i = 0; i < 100; i++) {
-            databaseHelper.insertValue(plate + i, vin, rcaDate, insDate);
+            databaseHelper.insertValue(plate + i, vin, rcaDate, insDate, 2, "4500", "1200");
         }
         for(int i = 0; i < 100; i++) {
             assertTrue(databaseHelper.getValue(plate + i));
