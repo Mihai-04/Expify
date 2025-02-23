@@ -3,6 +3,7 @@ import org.junit.Test;
 import java.time.LocalDate;
 
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class RedundantMethodsTest {
     RedundantMethods redundantMethods = new RedundantMethods();

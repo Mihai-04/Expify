@@ -5,7 +5,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.File;
-import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 /*
 1. pe mainPanel a apara toate masinile salvate (done)
@@ -37,6 +38,9 @@ SAU sa arate cate zile mai are fiecare doc in parte (done)
 24. closest day ar trebui inlocuit cu daysLeft (din databaeHelper sa iei doar valorile, nu se le si calculezi) (done)
 25. dotenv (done)
 26. cand dai select file se creaza folderul chiar daca nu dai save (FIX: daca dai cancel sa se stearga fisierul SAU sa nu se creeze deloc decat cand dai save)
+27. lista aia cu cate zile mai sunt sa fie Map<String, List<Integer>> String = nr de inmatriculare, lista = rca si ins (done)
+28. invalid input apare de mai multe ori (done)
+29. in map adauga si valori mai mici de 0 (done)
  */
 
 public class ExpifyFrame {
@@ -66,16 +70,20 @@ public class ExpifyFrame {
             redundantMethods.createDirectory();
         }
 
-        long days = databaseHelper.closestDate();
-        if(days > 365) {
+        databaseHelper.closestDate();
+        Map<String, List<Integer>> carDaysMap = redundantMethods.getAllMinDays();
+        if(!carDaysMap.isEmpty()) {
             SendMail mail = new SendMail();
-            String body = "Your car document will expire in " + days + " days.";
+            StringBuilder emailBody = new StringBuilder();
+            emailBody.append("Remaining Expiration Days:");
+            emailBody.append("\n");
 
-            try {
-                mail.sendMail("voicumihai81@gmail.com", "Document expiring soon", body);
-            } catch (IOException e) {
-                e.printStackTrace();
+            for(Map.Entry<String, List<Integer>> entry : carDaysMap.entrySet()) {
+                emailBody.append(entry.getKey() + ": ")
+                        .append(entry.getValue().toString().replaceAll("[\\[\\]]", "") + " days ");
+                emailBody.append("\n");
             }
+            //mail.sendMail("voicumihai81@gmail.com", "Document expiring soon", emailBody.toString());
         }
 
         topPanel.setBackground(new Color(45, 45, 45));

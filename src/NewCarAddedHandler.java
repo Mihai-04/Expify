@@ -37,6 +37,7 @@ public class NewCarAddedHandler {
 
         bottomPanel.setEnabled(true);
         bottomPanel.setVisible(true);
+        JPanel notificationPanel = new JPanel();
 
         JPanel vinPanel = new JPanel();
         redundantMethods.setPanelDesign(vinPanel, new Dimension(350, 50), new Color(45, 45,45),
@@ -193,7 +194,7 @@ public class NewCarAddedHandler {
         selectInsuranceButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                File destination = new File(redundantMethods.createCarDocument(numTextPlate.getText()));
+                //File destination = new File(redundantMethods.createCarDocument(numTextPlate.getText()));
                 JFileChooser fileChooser = new JFileChooser();
                 fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fileChooser.setDialogTitle("Choose insurance file");
@@ -203,8 +204,8 @@ public class NewCarAddedHandler {
                     try {
                         File selectedFile = fileChooser.getSelectedFile();
                         insuranceFilePath[0] = String.valueOf(fileChooser.getSelectedFile().toPath());
-                        insuranceDestinationPath[0] = String.valueOf(destination.toPath().resolve(selectedFile.getName()));
-                        //Files.copy(selectedPath, rcaDestinationPath, StandardCopyOption.REPLACE_EXISTING);
+                        //insuranceDestinationPath[0] = String.valueOf(destination.toPath().resolve(selectedFile.getName()));
+                        //Files.copy(selectedPath, insuranceDestinationPath, StandardCopyOption.REPLACE_EXISTING);
                     } catch (Exception ex) {
                         throw new RuntimeException(ex);
                     }
@@ -225,18 +226,19 @@ public class NewCarAddedHandler {
                     topPanel.setVisible(true);
                     bottomPanel.setVisible(false);
                     //redundantMethods.createDirectory(numTextPlate.getText());
-                    String directoryPath = redundantMethods.createCarDocument(numTextPlate.getText());
+                    /*String directoryPath = redundantMethods.createCarDocument(numTextPlate.getText());
                     String notesFileName = "Notes.txt";
                     File textFile = new File(directoryPath + File.separator, notesFileName);
                     try(FileWriter writer = new FileWriter(textFile)) {
                         writer.write("");
                     } catch (IOException ex) {
                         ex.printStackTrace();
-                    }
+                    }*/
                     if(rcaFilePath[0] != null || insuranceFilePath[0] != null) {
                         try {
-                            Files.copy(Paths.get(rcaFilePath[0]), Paths.get(rcaDestinationPath[0]), StandardCopyOption.REPLACE_EXISTING);
-                            Files.copy(Paths.get(insuranceFilePath[0]), Paths.get(insuranceDestinationPath[0]), StandardCopyOption.REPLACE_EXISTING);
+                            File file = new File(redundantMethods.createCarDocument(numTextPlate.getText()));
+                            //Files.copy(Paths.get(rcaFilePath[0]), Paths.get(rcaDestinationPath[0]), StandardCopyOption.REPLACE_EXISTING);
+                            Files.copy(Paths.get(insuranceFilePath[0]), file.toPath().resolve("test"), StandardCopyOption.REPLACE_EXISTING);
                             rcaFilePath[0] = null;
                             insuranceFilePath[0] = null;
                         } catch (IOException ex) {
@@ -262,7 +264,6 @@ public class NewCarAddedHandler {
                         vinTextField.setText("INVALID VALUE!");
                         System.out.println("vin Value: " + vinTextField.getText());
                     }
-                    JPanel notificationPanel = new JPanel();
                     redundantMethods.setPanelDesign(notificationPanel, new Dimension(130, 40),
                             null, new FlowLayout(FlowLayout.LEFT), null);
                     JTextField notificationTextField = new JTextField("Invalid input");

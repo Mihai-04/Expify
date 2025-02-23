@@ -9,8 +9,8 @@ import java.io.*;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.List;
-import java.util.ArrayList;
 
 public class DatabaseHelper {
     RedundantMethods redundantMethods = new RedundantMethods();
@@ -32,14 +32,13 @@ public class DatabaseHelper {
 
             String sql = "INSERT INTO CARS ([Num plate], VIN, [RCA DATE], [Insurance date], [Days left]) VALUES (?, ?, ?, ?, ?);";
             PreparedStatement ps = c.prepareStatement(sql);
-            long rcaDateLong = redundantMethods.daysLeft(rcaDate);
-            long insuranceDateLong = redundantMethods.daysLeft(insuranceDate);
+            String minDays = String.valueOf(redundantMethods.getMinDays(String.valueOf(rcaDate), String.valueOf(insuranceDate)));
 
             ps.setString(1, carPlate);
             ps.setString(2, vinNumber);
             ps.setString(3, rcaDate.toString());
             ps.setString(4, insuranceDate.toString());
-            ps.setString(5, String.valueOf(Math.min(rcaDateLong, insuranceDateLong)));
+            ps.setString(5, minDays);
             ps.executeUpdate();
 
             ps.close();
@@ -177,6 +176,27 @@ public class DatabaseHelper {
             while((line = br.readLine()) != null) {
                 notesField.append(line + "\r\n");
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Map<String, List<Integer>> getAllDays() {
+        Map<String, List<Integer>> carDaysMap = new HashMap<>();
+        try(Connection c = getConnection()) {
+            stmt = c.createStatement();
+            rs = stmt.executeQuery("SELECT [Num plate], [RCA DATE], [Insurance date] FROM CARS");
+            while(rs.next()) {
+                String plate = rs.getString("Num plate");
+                String rcaDate = rs.getString("RCA DATE");
+                String insuranceDate = rs.getString("Insurance date");
+                long rcaDays = redundantMethods.daysLeft(LocalDate.parse(rcaDate));
+                long insuranceDays = redundantMethods.daysLeft(LocalDate.parse(insuranceDate));
+                carDaysMap.computeIfAbsent(plate, k -> new ArrayList<>()).add((int) rcaDays);
+                carDaysMap.computeIfAbsent(plate, k -> new ArrayList<>()).add((int) insuranceDays);
+            }
+            System.out.println("all days: " + carDaysMap);
+            return carDaysMap;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

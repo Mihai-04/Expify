@@ -2,16 +2,16 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
+import java.awt.event.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class RedundantMethods {
 
@@ -24,7 +24,7 @@ public class RedundantMethods {
         panel.add(Box.createHorizontalStrut(5));
 
         JTextField carPlate = new JTextField(plate + ":");
-        setComponentDesign(carPlate, new Dimension(90, 45), null, new Color(150, 150, 150),
+        setComponentDesign(carPlate, new Dimension(100, 40), null, new Color(150, 150, 150),
                 new Font("Arial", Font.BOLD, 14));
         carPlate.setEditable(false);
         panel.add(carPlate);
@@ -319,6 +319,22 @@ public class RedundantMethods {
             documentsFile.mkdir();
         }
         return expifyFile;
+    }
+
+    public Map<String, List<Integer>> getAllMinDays() {
+        DatabaseHelper databaseHelper = new DatabaseHelper();
+        Map<String, List<Integer>> carDaysMap = databaseHelper.getAllDays();
+        System.out.println(carDaysMap);
+        for(Map.Entry<String, List<Integer>> entry :carDaysMap.entrySet()) {
+            String key = entry.getKey();
+            List<Integer> value = new ArrayList<>(entry.getValue());
+
+            value.removeIf(num -> num > 30 || num < 0);
+            carDaysMap.put(key, value);
+        }
+        carDaysMap.entrySet().removeIf(e -> e.getValue().isEmpty());
+        System.out.println("days left: " + carDaysMap);
+        return carDaysMap;
     }
 
     public long getMinDays(String rcaDate, String insDate) {
