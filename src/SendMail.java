@@ -4,7 +4,7 @@ import java.io.IOException;
 public class SendMail {
     private final String SENDGRID_API_KEY = Config.getApiKey();
 
-    public void sendMail(String to, String subject, String body) throws IOException {
+    public void sendDocumentsMail(String to, String subject, String body) throws IOException {
         Email email = new Email("expify08@gmail.com");
         Email toEmail = new Email(to);
         Content content = new Content("text/plain", body);

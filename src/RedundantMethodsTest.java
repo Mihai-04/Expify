@@ -1,7 +1,5 @@
 import org.junit.Test;
-
 import java.time.LocalDate;
-
 import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -49,6 +47,7 @@ public class RedundantMethodsTest {
         LocalDate currentDate = LocalDate.now();
         assertEquals(0, redundantMethods.daysLeft(currentDate));
     }
+
     /* --------------------------------
     * INSERT CAR
     * */

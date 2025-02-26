@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,19 +43,28 @@ SAU sa arate cate zile mai are fiecare doc in parte (done)
 28. invalid input apare de mai multe ori (done)
 29. in map adauga si valori mai mici de 0 (done)
 30. Registration Certificate
-Insurance Policy
-Technical Inspection Report
-Driver’s License (optional)
-Road Tax Payment
-Emission Test Certificate
-Service & Maintenance Records
-Warranty Documents
-Lease or Loan Agreements
-Parking Permits
+    Insurance Policy
+    Technical Inspection Report
+    Driver’s License (optional)
+    Road Tax Payment
+    Emission Test Certificate
+    Service & Maintenance Records
+    Warranty Documents
+    Lease or Loan Agreements
+    Parking Permits
 31. sa poti sa dai view documents cand apesi pe o masina (done)
 32. la leasing panel daca dai de mai multe or check o sa apara de mai mai multe ori panelul )done(
-34. optiune de setYourOwnReminder unde sa poti sa pui de exemplu cand ai rar-ul, inmatricularea etc
-35. de adaugat in view more total leasing si monthly pay + sa trimita mail cand dueDate - day.now() < 7 && dueDate - day.now() > 0
+33. sa poti adauga si alte documente (done)
+34. optiune de setYourOwnReminder (unde sa poti sa pui de exemplu cand ai rar-ul, inmatricularea etc)  (done)
+35. de adaugat in view more total leasing si monthly pay + sa trimita mail cand dueDate - day.now() < 7 && dueDate - day.now() > 0 (done)
+36. o metoda pentru trimis mail --
+37. OCR Tesseract
+38. saveNotes si saveEditedDate sa fie un singur buton (la fel si edit) (done)
+39. scroll in notesField (done [am facut sa ai limita de randuri])
+40. sa poti da reminder mark as done SI remove (done)
+41. reminderu trebuie sters si el din baza de date (done)
+42. sa trimita mail doar cu reminderele care sunt cu valoarea 0 (done)
+43. sa trimita un singur mail cu toate alea (done)
  */
 
 public class ExpifyFrame {
@@ -86,18 +96,49 @@ public class ExpifyFrame {
 
         databaseHelper.updateClosestDate();
         Map<String, List<Integer>> carDaysMap = redundantMethods.getAllMinDays();
-        if(!carDaysMap.isEmpty()) {
+        Map<String, List<Integer>> dueDateMap = databaseHelper.getDueDateMap();
+        Map<String, List<String>> reminderMap = databaseHelper.getReminderMap();
+        if(!redundantMethods.mapsNotEmpty(carDaysMap, dueDateMap, reminderMap)) {
+            System.out.println("test");
             SendMail mail = new SendMail();
             StringBuilder emailBody = new StringBuilder();
-            emailBody.append("Remaining Expiration Days:");
-            emailBody.append("\n");
-
-            for(Map.Entry<String, List<Integer>> entry : carDaysMap.entrySet()) {
-                emailBody.append(entry.getKey() + ": ")
-                        .append(entry.getValue().toString().replaceAll("[\\[\\]]", "") + " days ");
+            if(!carDaysMap.isEmpty()) {
+                emailBody.append("Remaining Expiration Days:");
                 emailBody.append("\n");
+                for(Map.Entry<String, List<Integer>> entry : carDaysMap.entrySet()) {
+                    emailBody.append(entry.getKey() + ": ")
+                            .append(entry.getValue().toString().replaceAll("[\\[\\]]", "") + " day(s) left");
+                    emailBody.append("\n");
+                }
             }
-            //mail.sendMail("voicumihai81@gmail.com", "Document expiring soon", emailBody.toString());
+            if(!dueDateMap.isEmpty()) {
+                emailBody.append("\n");
+                emailBody.append("Due date soon:");
+                emailBody.append("\n");
+                for(Map.Entry<String, List<Integer>> entry : dueDateMap.entrySet()) {
+                    emailBody.append(entry.getKey() + ": ")
+                            .append(entry.getValue().toString().replaceAll("[\\[\\]]", "") + " day(s) left");
+                    emailBody.append("\n");
+                }
+            }
+            if(!reminderMap.isEmpty()) {
+                emailBody.append("\n");
+                emailBody.append("Reminders:");
+                emailBody.append("\n");
+                for(Map.Entry<String, List<String>> entry : reminderMap.entrySet()) {
+                    emailBody.append(entry.getKey() + ": ".replaceAll("[\\[\\]]", ""));
+                    emailBody.append("\n");
+                    for(String reminder : entry.getValue()) {
+                        emailBody.append(reminder.replaceAll("[\\[\\]]", ""));
+                        emailBody.append("\n");
+                    }
+                }
+            }
+            try {
+                mail.sendDocumentsMail("voicumihai81@gmail.com", "Reminders soon", emailBody.toString());
+            } catch(Exception e) {
+                throw new RuntimeException(e);
+            }
         }
 
         topPanel.setBackground(new Color(45, 45, 45));
@@ -181,7 +222,7 @@ public class ExpifyFrame {
                 System.out.println("search: " + search);
                 if(databaseHelper.getValue(search)) { //if a car is found
                     databaseHelper.printCars(mainPanel, bottomPanel, search);
-                } else if(search.trim().isEmpty()) { //if no car is found or search if empty
+                } else if(search.trim().isEmpty() || search.equals("SEARCH CAR")) { //if no car is found or search if empty
                     databaseHelper.printCars(mainPanel, bottomPanel, "");
                 } else if(!databaseHelper.getValue(search)) {
                     mainPanel.removeAll();

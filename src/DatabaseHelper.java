@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.io.*;
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class DatabaseHelper {
             c.setAutoCommit(false);
             System.out.println("Opened database successfully");
 
-            String sql = "INSERT INTO CARS ([Num plate], VIN, [RCA DATE], [Insurance date], [Days left], [Leasing due date], [Total leasing], [Monthly pay]) VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
+            String sql = "INSERT INTO CARS ([Num plate], VIN, [RCA DATE], [Insurance date], [Days left]) VALUES (?, ?, ?, ?, ?);";
             PreparedStatement ps = c.prepareStatement(sql);
             String minDays = String.valueOf(redundantMethods.getMinDays(String.valueOf(rcaDate), String.valueOf(insuranceDate)));
 
@@ -32,16 +33,131 @@ public class DatabaseHelper {
             ps.setString(3, rcaDate.toString());
             ps.setString(4, insuranceDate.toString());
             ps.setString(5, minDays);
-            ps.setString(6, String.valueOf(dueDate));
-            ps.setString(7, totalLeasing);
-            ps.setString(8, monthlyPay);
+            ps.executeUpdate();
+
+            ps.close();
+
+            String leasingSQL = "INSERT INTO LEASING ([Num plate], [Leasing due date], [Total leasing], [Monthly pay]) VALUES (?, ?, ?, ?);)";
+            PreparedStatement leasingPs = c.prepareStatement(leasingSQL);
+            leasingPs.setString(1, carPlate);
+            leasingPs.setInt(2, dueDate);
+            leasingPs.setInt(3, Integer.parseInt(totalLeasing));
+            leasingPs.setInt(4, Integer.parseInt(monthlyPay));
+
+            leasingPs.executeUpdate();
+            c.commit();
+            c.close();
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void insertReminder(String plate, String description, LocalDate reminderLocalDate) {
+        try(Connection c = getConnection()) {
+            c.setAutoCommit(false);
+            String insertSQL = "INSERT INTO reminders ([Num plate], Description, Date, [Is done]) VALUES (?, ?, ?, ?);";
+            PreparedStatement ps = c.prepareStatement(insertSQL);
+            ps.setString(1, plate);
+            ps.setString(2, description);
+            ps.setString(3, reminderLocalDate.toString());
+            ps.setInt(4, 0);
             ps.executeUpdate();
 
             ps.close();
             c.commit();
             c.close();
         } catch(Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void updateReminder(String plate, String description, LocalDate reminderLocalDate, int value) {
+        try(Connection c = getConnection()) {
+            c.setAutoCommit(false);
+            String updateSQL = "UPDATE Reminders SET [Is done] = ? WHERE [Num plate] = ? AND [Description] = ? AND Date = ?";
+            PreparedStatement ps = c.prepareStatement(updateSQL);
+            System.out.println("plate: " + plate + " description: " + description + " reminderLocalDate: " + reminderLocalDate + " value: " + value);
+            ps.setInt(1, value);
+            ps.setString(2, plate);
+            ps.setString(3, description);
+            ps.setString(4, reminderLocalDate.toString());
+            ps.executeUpdate();
+
+            ps.close();
+            c.commit();
+            c.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void removeReminder(String plate, String description, LocalDate reminderLocalDate) {
+        try(Connection c = getConnection()) {
+            c.setAutoCommit(false);
+            String deleteSQL = "DELETE FROM Reminders WHERE [Num plate] = ? AND [Description] = ? AND Date = ?";
+            PreparedStatement ps = c.prepareStatement(deleteSQL);
+            ps.setString(1, plate);
+            ps.setString(2, description);
+            ps.setString(3, reminderLocalDate.toString());
+            ps.executeUpdate();
+
+            ps.close();
+            c.commit();
+            c.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Map<String, List<String>> reminderMap(String plate) {
+        try(Connection c = getConnection()) {
+            Map<String, List<String>> reminderMap = new HashMap<>();
+            String selectSQL = "SELECT [Num plate], Date, Description FROM reminders WHERE [Num plate] = ?";
+            PreparedStatement ps = c.prepareStatement(selectSQL);
+            ps.setString(1, plate);
+            rs = ps.executeQuery();
+            while(rs.next()) {
+                reminderMap.computeIfAbsent(rs.getString(2), k -> new ArrayList<>()).add(rs.getString(3));
+            }
+            return reminderMap;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Map<String, List<String>> getReminderMap() {
+        try(Connection c = getConnection()){
+            Map<String, List<String>> reminderMap = new HashMap<>();
+            String selectSQL = "SELECT [Num plate], Date, Description, [Is done] FROM reminders";
+            PreparedStatement ps = c.prepareStatement(selectSQL);
+            rs = ps.executeQuery();
+            while(rs.next()) {
+                long days = redundantMethods.daysLeft(LocalDate.parse(rs.getString(2)));
+                int isDone = rs.getInt(4);
+                if(days >= 0 && days <= 7 && isDone == 0) {
+                    reminderMap.computeIfAbsent(rs.getString(1), k -> new ArrayList<>()).add(rs.getString(2) + " " + rs.getString(3));
+                }
+            }
+            return reminderMap;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public int getReminderValue(String plate, String description, LocalDate reminderLocalDate) {
+        try(Connection c = getConnection()) {
+            String selectSQL = "SELECT [Is done] FROM Reminders WHERE [Num plate] = ? AND [Description] = ? AND Date = ?";
+            PreparedStatement ps = c.prepareStatement(selectSQL);
+            ps.setString(1, plate);
+            ps.setString(2, description);
+            ps.setString(3, reminderLocalDate.toString());
+            rs = ps.executeQuery();
+            if(rs.next()) {
+                return rs.getInt(1);
+            }
+            return -1;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -78,6 +194,19 @@ public class DatabaseHelper {
             ps.setString(1, carPlate);
             ps.executeUpdate();
             ps.close();
+
+            String leasingSQL = "DELETE FROM LEASING WHERE [Num plate] = ?";
+            PreparedStatement leasingPs = c.prepareStatement(leasingSQL);
+            leasingPs.setString(1, carPlate);
+            leasingPs.executeUpdate();
+            leasingPs.close();
+
+            String reminderSQL = "DELETE FROM reminders WHERE [Num plate] = ?";
+            PreparedStatement reminderPs = c.prepareStatement(reminderSQL);
+            reminderPs.setString(1, carPlate);
+            reminderPs.executeUpdate();
+            reminderPs.close();
+
             c.commit();
             c.close();
         } catch(Exception e) {
@@ -86,23 +215,22 @@ public class DatabaseHelper {
     }
 
     public void printCars(JPanel mainPanel, JPanel bottomPanel, String searchValue) {
-        try(Connection c = getConnection()) {
+        try (Connection c = getConnection()) {
             mainPanel.removeAll();
             bottomPanel.setVisible(false);
 
-            String sql = "SELECT * FROM CARS";
-            PreparedStatement ps = c.prepareStatement(sql);
-            if(!searchValue.isEmpty() && searchValue.contains(searchValue)) {
-                sql = "SELECT * FROM CARS WHERE [Num plate] LIKE ?";
-                ps = c.prepareStatement(sql);
-                ps.setString(1, "%" + searchValue + "%");
-                rs = ps.executeQuery();
-            } else {
-                ps = c.prepareStatement(sql);
-                rs = ps.executeQuery();
-            }
+            String sql = "SELECT C.[Num plate], C.VIN, C.[Days left], C.[RCA DATE], C.[Insurance date], " +
+                    "L.[Leasing due date], L.[Total leasing], L.[Monthly pay] " +
+                    "FROM CARS C " +
+                    "LEFT JOIN LEASING L ON C.[Num plate] = L.[Num plate] " +
+                    "WHERE (? = '' OR C.[Num plate] LIKE ?)";
 
-            while(rs.next()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ps.setString(1, searchValue);
+            ps.setString(2, "%" + searchValue + "%");
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
                 String plate = rs.getString("Num plate");
                 String vinNumber = rs.getString("VIN");
                 String daysLeft = rs.getString("Days left");
@@ -110,9 +238,10 @@ public class DatabaseHelper {
                 long rcaDays = redundantMethods.daysLeft(LocalDate.parse(rcaDate));
                 String insuranceDate = rs.getString("Insurance date");
                 long insuranceDays = redundantMethods.daysLeft(LocalDate.parse(insuranceDate));
-                String dueDate = rs.getString("Leasing due date");
-                int totalLeasing = Integer.parseInt(rs.getString("Total leasing"));
-                int monthlyPay = Integer.parseInt(rs.getString("Monthly pay"));
+
+                String dueDate = rs.getString("Leasing due date") != null ? rs.getString("Leasing due date") : "0";
+                String totalLeasing = rs.getString("Total leasing") != null ? rs.getString("Total leasing") : "0";
+                String monthlyPay = rs.getString("Monthly pay") != null ? rs.getString("Monthly pay") : "0";
 
                 redundantMethods.createCarPanel(mainPanel, bottomPanel, plate, vinNumber, daysLeft, rcaDate, rcaDays, insuranceDate, insuranceDays, dueDate, totalLeasing, monthlyPay);
             }
@@ -120,6 +249,7 @@ public class DatabaseHelper {
             e.printStackTrace();
         }
     }
+
 
     public boolean isDatabaseEmpty() {
        try(Connection c = getConnection()) {
@@ -197,6 +327,59 @@ public class DatabaseHelper {
             System.out.println("all days: " + carDaysMap);
             return carDaysMap;
         } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Map<String, List<Integer>> getDueDateMap() {
+        Map<String, List<Integer>> dueDateMap = new HashMap<>();
+        try(Connection c = getConnection()) {
+            String selectQuery = "SELECT [Num plate], [Leasing due date] FROM leasing";
+            PreparedStatement pstmt = c.prepareStatement(selectQuery);
+            rs = pstmt.executeQuery();
+            while(rs.next()) {
+                String plate = rs.getString("Num plate");
+                int dueDate = Integer.parseInt(rs.getString("Leasing due date"));
+                if(dueDate != 0) {
+                    LocalDate today = LocalDate.now();
+                    LocalDate dueLocalDate = LocalDate.of(today.getYear(), today.getMonthValue(), dueDate);
+                    /*if(dueDate < today.getDayOfMonth()) {
+                        dueLocalDate.plusMonths(1);
+                    } */
+                    long daysBetween = ChronoUnit.DAYS.between(today, dueLocalDate);
+                    if(daysBetween >= 0 && daysBetween <= 7) {
+                        dueDateMap.computeIfAbsent(plate, k -> new ArrayList<>()).add((int) dueDate - LocalDate.now().getDayOfMonth());
+                    }
+                }
+            }
+
+            return dueDateMap;
+        } catch(Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void updateCalendar(String numPlate, String editedRcaDate, String editedInsDate) {
+        try(Connection c = getConnection()) {
+            c.setAutoCommit(false);
+            stmt = c.createStatement();
+            String selectQuery = "SELECT [Num plate], [RCA DATE], [Insurance Date] FROM CARS WHERE [Num plate] = ?";
+            PreparedStatement psSelect = c.prepareStatement(selectQuery);
+            psSelect.setString(1, numPlate);
+            ResultSet rs = psSelect.executeQuery();
+            if(rs.next()) {
+                String updateQuery = "UPDATE CARS SET [RCA DATE] = ?, [Insurance Date] = ? WHERE [Num plate] = ?";
+                try (PreparedStatement psUpdate = c.prepareStatement(updateQuery)) {
+                    psUpdate.setString(1, editedRcaDate);
+                    psUpdate.setString(2, editedInsDate);
+                    psUpdate.setString(3, numPlate);
+                    psUpdate.executeUpdate();
+                }
+            }
+            stmt.close();
+            c.commit();
+            c.close();
+        } catch(Exception e) {
             throw new RuntimeException(e);
         }
     }

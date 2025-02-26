@@ -65,12 +65,13 @@ public class NewCarAddedHandler {
             @Override
             public void focusGained(FocusEvent e) {
                 if(vinTextField.getText().equals("Vehicle Identification Number") || vinTextField.getText().trim().isEmpty()) {
-                    final int[] limit = {17};
+                    //final int[] limit = {17};
+                    int limit = 17;
                     vinTextField.setText("");
                     vinTextField.setDocument(new PlainDocument() {
                         @Override
                         public void insertString(int offs, String str, AttributeSet a) throws BadLocationException {
-                            if(getLength() + str.length() <= limit[0]) {
+                            if(getLength() + str.length() <= limit) {
                                 super.insertString(offs, str, a);
                             }
                         }
@@ -366,7 +367,7 @@ public class NewCarAddedHandler {
                             String rcaFileName = rcaSourcePath.getFileName().toString();
 
                             Path destinationDir = Paths.get(System.getProperty("user.home"), "Expify", "Documents", numTextPlate.getText().replaceAll(" +", " ").replaceFirst("\\s++$", "").toUpperCase());
-                            Files.createDirectories(destinationDir);
+                            //Files.createDirectories(destinationDir);
 
                             Path insuranceDestinationPath = destinationDir.resolve(insuranceFileName);
                             Path rcaDestinationPath = destinationDir.resolve(rcaFileName);
@@ -392,6 +393,12 @@ public class NewCarAddedHandler {
                     String vinNumber = vinTextField.getText().toUpperCase();
                     String totalLeasingAmount = totalLeasing.getText();
                     String monthlyPayAmount = monthlyPay.getText();
+                    if(totalLeasingAmount.equals("Total Leasing")) {
+                        totalLeasingAmount = "0";
+                    }
+                    if(monthlyPayAmount.equals("Monthly Pay")) {
+                        monthlyPayAmount = "0";
+                    }
                     databaseHelper.insertValue(numPlate, vinNumber, rcaLocalDate, insuranceLocalDate, daysComboBox.getSelectedIndex(), totalLeasingAmount, monthlyPayAmount);
                     databaseHelper.printCars(mainPanel, bottomPanel, "");
                 } else if(!badValue.equals("")) {
