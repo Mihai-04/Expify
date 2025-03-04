@@ -18,7 +18,6 @@ import java.util.Map;
 6. limita de caractere in vinText, carPlate etc (done)
 7. isVINvalid trebuie lucrat oleaca (1FA6P8R07M5555324, U5YPC813DDL414732)
 8. la fiecare masina in parte sa poti sa adaugi notes (unde sa scrii km, cand ai facut ultimul schimb de ulei etc) (done)
-9. daca iau doar o restanta sa imi iau adidasii aia (https://eu.puma.com/ro/en/pd/suede-xl-sneakers-unisex/395205.html?dwvar_395205_color=02)
 10. daca trece o zi, in baza de date ramane tot atatea daysLeft (done)
 (trebuie facut ca atunci cand deschizi aplicatia zilele ramase sa isi dea refresh)
 11. daca un field nu este unic sa apara o notificare sa zica chestia asta + sa poti sa apesi "x" (done)
